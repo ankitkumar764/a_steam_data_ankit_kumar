@@ -1,5 +1,15 @@
 const Game = require('../models/gameModel');
 
+/*
+=================================================================================
+  SECTION 1: UTILITIES & FALLBACK DATA ENRICHMENT (UTILITY MODULES)
+  -------------------------------------------------------------------------------
+  Ye section helper functions provide karta hai jo appid normalize karne aur database 
+  se fetch kiye gaye raw game objects mein ratings, platforms, downloads, aur discounts 
+  jaise dynamic fallback details fill karne mein kaam aate hain.
+=================================================================================
+*/
+
 // parseAppId: string appid ko normalized string format mein convert karta hai.
 // Agar invalid value aaye toh null return karega.
 const parseAppId = (value) => {
@@ -170,23 +180,314 @@ const enrichGameData = (game) => {
     ];
   }
   
+  // 15. Discount details fallback:
+  // Kuch games ko discounted mark karenge based on appid and price > 0.
+  // Original price aur discount_percent determine karte hain.
+  const priceNum = parseFloat(gameObj.price) || 0;
+  if (priceNum > 0 && appidNum % 3 === 0) {
+    gameObj.discount = true;
+    gameObj.discount_percent = 10 + (appidNum % 80); // 10% se 89% ke beech ka discount
+    // Original price calculate karenge (current price discount hone ke baad ki price hai)
+    gameObj.original_price = parseFloat((priceNum / (1 - gameObj.discount_percent / 100)).toFixed(2));
+  } else {
+    gameObj.discount = false;
+    gameObj.discount_percent = 0;
+    gameObj.original_price = priceNum;
+  }
+
   return gameObj;
 };
 
+/*
+=================================================================================
+  SECTION 2: QUERY PARAMETER FILTERS (MAIN LISTING ENDPOINT)
+  -------------------------------------------------------------------------------
+  Ye route query params (?genre=action, ?developer=valve, ?minPrice=10, etc.) read 
+  karke dynamic database query construct karta hai.
+  Beginner logic:
+  - req.query property Express framework automatically fill karta hai.
+  - Agar filter parameters present hon, toh hum unhe flat conditions array mein push 
+    karte hain aur Mongoose query check ($and/$or/$expr) pass karte hain.
+=================================================================================
+*/
+
 // GET /api/v1/games
-// Yahan se game list milta hai. search aur pagination optional hai.
+// Yahan se game list milta hai. search, pagination aur different filters query params ke roop mein optional hain.
 const getGames = async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.max(1, parseInt(req.query.limit, 10) || 20);
     const filter = {};
+    const conditions = [];
 
-    // Agar search param hai toh name field mein match kare.
-    if (req.query.search) filter.name = { $regex: req.query.search, $options: 'i' };
+    // Agar search param hai toh name field mein match kare (case-insensitive).
+    if (req.query.search) {
+      filter.name = { $regex: req.query.search, $options: 'i' };
+    }
 
     // archived parameter ko bhi support karte hain.
     if (req.query.archived === 'true' || req.query.archived === 'false') {
       filter.isArchived = req.query.archived === 'true';
+    }
+
+    // 1. Genre filter: check for case-insensitive match on genres string
+    if (req.query.genre) {
+      conditions.push({ genres: { $regex: String(req.query.genre).trim(), $options: 'i' } });
+    }
+
+    // 2. Developer filter: check for case-insensitive match on developer
+    if (req.query.developer) {
+      conditions.push({ developer: { $regex: String(req.query.developer).trim(), $options: 'i' } });
+    }
+
+    // 3. Publisher filter: check for case-insensitive match on publisher
+    if (req.query.publisher) {
+      conditions.push({ publisher: { $regex: String(req.query.publisher).trim(), $options: 'i' } });
+    }
+
+    // 4. Platform filter: compatible systems check (Windows, Mac, Linux)
+    if (req.query.platform) {
+      const platform = String(req.query.platform).trim().toLowerCase();
+      if (platform === 'windows') {
+        conditions.push({
+          $or: [
+            { platforms: { $regex: 'windows', $options: 'i' } },
+            { platforms: { $exists: false } },
+            { platforms: { $size: 0 } }
+          ]
+        });
+      } else if (platform === 'mac') {
+        conditions.push({
+          $or: [
+            { platforms: { $regex: 'mac', $options: 'i' } },
+            {
+              $and: [
+                { $or: [{ platforms: { $exists: false } }, { platforms: { $size: 0 } }] },
+                {
+                  $or: [
+                    { categories: { $regex: 'mac|apple', $options: 'i' } },
+                    {
+                      $expr: {
+                        $eq: [ { $mod: [ { $toInt: "$appid" }, 4 ] }, 0 ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        });
+      } else if (platform === 'linux') {
+        conditions.push({
+          $or: [
+            { platforms: { $regex: 'linux', $options: 'i' } },
+            {
+              $and: [
+                { $or: [{ platforms: { $exists: false } }, { platforms: { $size: 0 } }] },
+                {
+                  $or: [
+                    { categories: { $regex: 'linux|steam deck', $options: 'i' } },
+                    {
+                      $expr: {
+                        $eq: [ { $mod: [ { $toInt: "$appid" }, 5 ] }, 0 ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        });
+      } else {
+        conditions.push({ platforms: { $regex: platform, $options: 'i' } });
+      }
+    }
+
+    // 5. Tag filter: matches tags array or falls back to genres/categories regex search
+    if (req.query.tag) {
+      const tag = String(req.query.tag).trim();
+      conditions.push({
+        $or: [
+          { tags: { $regex: tag, $options: 'i' } },
+          {
+            $and: [
+              { $or: [{ tags: { $exists: false } }, { tags: { $size: 0 } }] },
+              {
+                $or: [
+                  { genres: { $regex: tag, $options: 'i' } },
+                  { categories: { $regex: tag, $options: 'i' } }
+                ]
+              }
+            ]
+          }
+        ]
+      });
+    }
+
+    // 6. Price range filters (minPrice & maxPrice): string price converted to double in DB
+    const priceExprs = [];
+    if (req.query.minPrice !== undefined) {
+      const minP = parseFloat(req.query.minPrice);
+      if (!isNaN(minP)) {
+        priceExprs.push({ $gte: [ { $toDouble: "$price" }, minP ] });
+      }
+    }
+    if (req.query.maxPrice !== undefined) {
+      const maxP = parseFloat(req.query.maxPrice);
+      if (!isNaN(maxP)) {
+        priceExprs.push({ $lte: [ { $toDouble: "$price" }, maxP ] });
+      }
+    }
+    if (priceExprs.length > 0) {
+      conditions.push({
+        $expr: {
+          $and: priceExprs
+        }
+      });
+    }
+
+    // 7. Rating filter: check standard or calculated ratings.
+    // Scale detection: agar rating <= 10 hai, toh use 100-point scale mein transform karte hain (multiplied by 10).
+    if (req.query.rating !== undefined) {
+      let minRating = parseFloat(req.query.rating);
+      if (!isNaN(minRating)) {
+        if (minRating <= 10) {
+          minRating = minRating * 10;
+        }
+        
+        const calculatedRatingExpr = {
+          $cond: [
+            { $gt: [ { $toInt: { $ifNull: [ "$recommendations", "0" ] } }, 0 ] },
+            {
+              $min: [
+                98,
+                {
+                  $max: [
+                    65,
+                    { $add: [ 75, { $mod: [ { $toInt: { $ifNull: [ "$recommendations", "0" ] } }, 24 ] } ] }
+                  ]
+                }
+              ]
+            },
+            { $add: [ 60, { $mod: [ { $toInt: "$appid" }, 30 ] } ] }
+          ]
+        };
+
+        conditions.push({
+          $or: [
+            { rating: { $gte: minRating } },
+            {
+              $and: [
+                { $or: [ { rating: { $exists: false } }, { rating: 0 } ] },
+                {
+                  $expr: {
+                    $gte: [
+                      calculatedRatingExpr,
+                      minRating
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        });
+      }
+    }
+
+    // 8. Release Year filter: match release_year string or end of release_date string
+    if (req.query.releaseYear) {
+      const year = parseInt(req.query.releaseYear, 10);
+      if (!isNaN(year)) {
+        const yearStr = String(year);
+        conditions.push({
+          $or: [
+            { release_year: yearStr },
+            { release_date: { $regex: `${yearStr}$` } }
+          ]
+        });
+      }
+    }
+
+    // 9. Discount filter: matches our virtual discount logic.
+    // discount=true filters games with price > 0 and appid divisible by 3.
+    if (req.query.discount !== undefined) {
+      const isDiscounted = req.query.discount === 'true';
+      if (isDiscounted) {
+        conditions.push({
+          $expr: {
+            $and: [
+              { $gt: [ { $toDouble: "$price" }, 0 ] },
+              { $eq: [ { $mod: [ { $toInt: "$appid" }, 3 ] }, 0 ] }
+            ]
+          }
+        });
+      } else {
+        conditions.push({
+          $expr: {
+            $or: [
+              { $eq: [ { $toDouble: "$price" }, 0 ] },
+              { $ne: [ { $mod: [ { $toInt: "$appid" }, 3 ] }, 0 ] }
+            ]
+          }
+        });
+      }
+    }
+
+    // 10. Multiplayer filter: matches online / local multiplayer keywords in categories or tags
+    if (req.query.multiplayer !== undefined) {
+      const isMultiplayer = req.query.multiplayer === 'true';
+      const multiplayerRegex = 'multi-player|pvp|co-op|cooperative';
+      if (isMultiplayer) {
+        conditions.push({
+          $or: [
+            { tags: { $regex: 'multiplayer', $options: 'i' } },
+            { categories: { $regex: multiplayerRegex, $options: 'i' } }
+          ]
+        });
+      } else {
+        conditions.push({
+          $or: [
+            { tags: { $not: { $regex: 'multiplayer', $options: 'i' } } },
+            { tags: { $exists: false } }
+          ]
+        });
+        conditions.push({
+          $or: [
+            { categories: { $exists: false } },
+            { categories: { $not: { $regex: multiplayerRegex, $options: 'i' } } }
+          ]
+        });
+      }
+    }
+
+    // 11. Free to Play filter: price is 0 or genres/categories contain 'free to play'
+    if (req.query.freeToPlay !== undefined) {
+      const isFree = req.query.freeToPlay === 'true';
+      if (isFree) {
+        conditions.push({
+          $or: [
+            { price: '0.0' },
+            { price: 0 },
+            { genres: { $regex: 'free to play', $options: 'i' } },
+            { categories: { $regex: 'free to play', $options: 'i' } }
+          ]
+        });
+      } else {
+        conditions.push({
+          $expr: { $gt: [ { $toDouble: "$price" }, 0 ] }
+        });
+        conditions.push({
+          genres: { $not: { $regex: 'free to play', $options: 'i' } }
+        });
+        conditions.push({
+          categories: { $not: { $regex: 'free to play', $options: 'i' } }
+        });
+      }
+    }
+
+    // Agar conditions array mein filters hain toh unhe $and query operator ke roop mein filter object mein add karte hain.
+    if (conditions.length > 0) {
+      filter.$and = conditions;
     }
 
     const total = await Game.countDocuments(filter);
@@ -195,11 +496,25 @@ const getGames = async (req, res) => {
       .skip((page - 1) * limit)
       .limit(limit);
 
-    res.json({ page, limit, total, count: games.length, games });
+    // List ke har ek game document ko enrichment function se format/add additional details set karte hain.
+    const enrichedGames = games.map(game => enrichGameData(game));
+
+    res.json({ page, limit, total, count: enrichedGames.length, games: enrichedGames });
   } catch (e) {
     res.status(500).json({ message: 'Error fetching games', error: e.message });
   }
 };
+
+/*
+=================================================================================
+  SECTION 3: BASIC CRUD (CREATE, READ, UPDATE, DELETE) & MAIN ACTIONS
+  -------------------------------------------------------------------------------
+  Ye section database mein specific game documents add, replace, update, delete, 
+  exists check aur archives handle karne ke business logic operations handle karta hai.
+  Beginner logic:
+  - URL pattern /:appid se dynamically id target hoti hai jo req.params se read karte hain.
+=================================================================================
+*/
 
 // GET /api/v1/games/:appid
 // Ek specific game ko appid se laata hai.
@@ -389,9 +704,16 @@ const getRelatedGames = async (req, res) => {
   }
 };
 
-// ==================== GAME INFORMATION ROUTES ====================
-// Ye section game ke screenshots, trailers, reviews, achievements aur dusri cheezein
-// Handle karta hai - basically game ke details ka sab information
+/*
+=================================================================================
+  SECTION 4: GAME INFORMATION & SUB-RESOURCES (DETAILS & SOCIALS)
+  -------------------------------------------------------------------------------
+  Ye section specific game key arrays aur sub-resources query and modify karne ke 
+  methods hold karta hai: jaise user reviews, screenshots gallery, gameplay trailers, 
+  system requirements (minimum & recommended configurations), updates logs, and 
+  bulletin news channels.
+=================================================================================
+*/
 
 // GET /api/v1/games/:appid/screenshots
 // Game ke images (screenshots) ko data se nikaal kar bhejta hai
@@ -825,11 +1147,18 @@ const getNews = async (req, res) => {
   }
 };
 
-
-// ==================== GAMES KO FILTER KARNE KE METHODS ====================
-// Iske andar sab wo methods hain jo different filters se games dhundhte hain.
-// Har method ek specific query parameters (filter) aur database fallback logic ka use karta hai
-// taaki beginner developers ko coding flow aur logic achhe se samajh aaye.
+/*
+=================================================================================
+  SECTION 5: ROUTE PARAMETER FILTERS (e.g. /genre/:genre, /platform/:platform)
+  -------------------------------------------------------------------------------
+  Ye section path-based dynamic route parameters se filter karne ke methods handle 
+  karta hai.
+  Beginner logic:
+  - URL parameter read karne ke liye req.params read hota hai.
+  - Har method custom MongoDB match pipelines ya regex pattern search use karke 
+    specific collection subsets filter aur return karta hai.
+=================================================================================
+*/
 
 // GET /api/v1/games/genre/:genre
 // Genre (jaise Action, RPG, Strategy) ke hisaab se games return karta hai.
@@ -1315,6 +1644,276 @@ const getGamesByFeature = async (req, res) => {
 };
 
 
+// GET /api/v1/games/filter/:filterType
+// Presets based filtering routes (e.g. /filter/free-to-play, /filter/top-rated, etc.)
+// Ye method dynamic path parameters parse karke preset criteria ke matching game collections return karta hai.
+const getGamesByFilterType = async (req, res) => {
+  try {
+    const filterType = String(req.params.filterType || '').trim().toLowerCase();
+    if (!filterType) {
+      return res.status(400).json({ message: 'Filter type parameter required hai' });
+    }
+
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit, 10) || 20);
+    const skip = (page - 1) * limit;
+
+    let queryObj = { isArchived: { $ne: true } }; // Default: actively showing games only
+    let useAggregation = false;
+    let games = [];
+    let total = 0;
+
+    // Rating calculations fallback expression for games that don't have explicit rating field.
+    const calculatedRatingExpr = {
+      $cond: [
+        { $gt: [ { $toInt: { $ifNull: [ "$recommendations", "0" ] } }, 0 ] },
+        {
+          $min: [
+            98,
+            {
+              $max: [
+                65,
+                { $add: [ 75, { $mod: [ { $toInt: { $ifNull: [ "$recommendations", "0" ] } }, 24 ] } ] }
+              ]
+            }
+          ]
+        },
+        { $add: [ 60, { $mod: [ { $toInt: "$appid" }, 30 ] } ] }
+      ]
+    };
+
+    switch (filterType) {
+      case 'free-to-play':
+        // Price is 0 or 0.0 or category/genre string matches 'free to play'
+        queryObj = {
+          isArchived: { $ne: true },
+          $or: [
+            { price: '0.0' },
+            { price: 0 },
+            { genres: { $regex: 'free to play', $options: 'i' } },
+            { categories: { $regex: 'free to play', $options: 'i' } }
+          ]
+        };
+        break;
+
+      case 'paid':
+        // Price > 0 and free-to-play is NOT present in genres/categories
+        queryObj = {
+          isArchived: { $ne: true },
+          $and: [
+            { $expr: { $gt: [ { $toDouble: "$price" }, 0 ] } },
+            { genres: { $not: { $regex: 'free to play', $options: 'i' } } },
+            { categories: { $not: { $regex: 'free to play', $options: 'i' } } }
+          ]
+        };
+        break;
+
+      case 'discounted':
+        // Virtual discount logic matching getGames where appid % 3 === 0 and price > 0
+        queryObj = {
+          isArchived: { $ne: true },
+          $expr: {
+            $and: [
+              { $gt: [ { $toDouble: "$price" }, 0 ] },
+              { $eq: [ { $mod: [ { $toInt: "$appid" }, 3 ] }, 0 ] }
+            ]
+          }
+        };
+        break;
+
+      case 'early-access':
+        // Early Access keyword matches in genres, categories, or tags
+        queryObj = {
+          isArchived: { $ne: true },
+          $or: [
+            { genres: { $regex: 'early access', $options: 'i' } },
+            { categories: { $regex: 'early access', $options: 'i' } },
+            { tags: { $regex: 'early access', $options: 'i' } }
+          ]
+        };
+        break;
+
+      case 'vr-only':
+        // VR support/exclusivity matches in categories or name
+        queryObj = {
+          isArchived: { $ne: true },
+          $or: [
+            { categories: { $regex: 'vr only|vr supported|tracked controller support', $options: 'i' } },
+            { name: { $regex: '\\bvr\\b|virtual reality', $options: 'i' } }
+          ]
+        };
+        break;
+
+      case 'controller-support':
+        // Controller support features match in categories or tags
+        queryObj = {
+          isArchived: { $ne: true },
+          categories: { $regex: 'controller support|full controller support|partial controller support', $options: 'i' }
+        };
+        break;
+
+      case 'multiplayer':
+        // Matches online or local multiplayer keywords in tags or categories
+        const multiplayerRegex = 'multi-player|pvp|co-op|cooperative|multiplayer';
+        queryObj = {
+          isArchived: { $ne: true },
+          $or: [
+            { genres: { $regex: 'multiplayer', $options: 'i' } },
+            { categories: { $regex: multiplayerRegex, $options: 'i' } }
+          ]
+        };
+        break;
+
+      case 'singleplayer':
+        // Matches singleplayer keyword in genres, categories, or tags
+        queryObj = {
+          isArchived: { $ne: true },
+          $or: [
+            { genres: { $regex: 'single-player|singleplayer', $options: 'i' } },
+            { categories: { $regex: 'single-player|singleplayer', $options: 'i' } }
+          ]
+        };
+        break;
+
+      case 'coop':
+        // Matches co-op / cooperative keywords in categories
+        queryObj = {
+          isArchived: { $ne: true },
+          categories: { $regex: 'co-op|cooperative|coop', $options: 'i' }
+        };
+        break;
+
+      case 'open-world':
+        // Matches open world in name field (as description/tags are empty in raw DB)
+        queryObj = {
+          isArchived: { $ne: true },
+          name: { $regex: 'open world|open-world', $options: 'i' }
+        };
+        break;
+
+      case 'survival':
+        // Matches survival in name field (as description/tags are empty in raw DB)
+        queryObj = {
+          isArchived: { $ne: true },
+          name: { $regex: 'survival', $options: 'i' }
+        };
+        break;
+
+      case 'horror':
+        // Matches horror in name field (as description/tags are empty in raw DB)
+        queryObj = {
+          isArchived: { $ne: true },
+          name: { $regex: 'horror', $options: 'i' }
+        };
+        break;
+
+      case 'anime':
+        // Matches anime in name field (as description/tags are empty in raw DB)
+        queryObj = {
+          isArchived: { $ne: true },
+          name: { $regex: 'anime', $options: 'i' }
+        };
+        break;
+
+      case 'indie':
+        // Matches indie in genres
+        queryObj = {
+          isArchived: { $ne: true },
+          genres: { $regex: 'indie', $options: 'i' }
+        };
+        break;
+
+      case 'top-rated':
+        // Matches rating >= 80 (explicit rating or calculated rating)
+        useAggregation = true;
+        queryObj = {
+          isArchived: { $ne: true },
+          $or: [
+            { rating: { $gte: 80 } },
+            {
+              $and: [
+                { $or: [ { rating: { $exists: false } }, { rating: 0 } ] },
+                {
+                  $expr: {
+                    $gte: [
+                      calculatedRatingExpr,
+                      80
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        };
+        break;
+
+      default:
+        return res.status(400).json({ 
+          message: `Invalid filter type: '${filterType}'. Available presets: free-to-play, paid, discounted, early-access, vr-only, controller-support, multiplayer, singleplayer, coop, open-world, survival, horror, anime, indie, top-rated.` 
+        });
+    }
+
+    if (useAggregation) {
+      // Aggregate use karte hain rating calculate aur sorted desc order mein return karne ke liye
+      total = await Game.countDocuments(queryObj);
+      const pipeline = [
+        { $match: queryObj },
+        {
+          $addFields: {
+            calculatedRating: {
+              $cond: [
+                { $gt: [ { $type: "$rating" }, "missing" ] },
+                {
+                  $cond: [
+                    { $eq: [ "$rating", 0 ] },
+                    calculatedRatingExpr,
+                    "$rating"
+                  ]
+                },
+                calculatedRatingExpr
+              ]
+            }
+          }
+        },
+        { $sort: { calculatedRating: -1 } },
+        { $skip: skip },
+        { $limit: limit }
+      ];
+
+      const rawGames = await Game.aggregate(pipeline);
+      games = rawGames.map(game => {
+        game.rating = game.calculatedRating;
+        delete game.calculatedRating;
+        return enrichGameData(game);
+      });
+    } else {
+      // Normal find query with pagination, sorted by recommendations/date descending
+      total = await Game.countDocuments(queryObj);
+      const rawGames = await Game.find(queryObj)
+        .sort({ recommendations: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+      games = rawGames.map(game => enrichGameData(game));
+    }
+
+    res.json({
+      filter: 'preset',
+      value: filterType,
+      page,
+      limit,
+      total,
+      count: games.length,
+      games: games
+    });
+
+  } catch (e) {
+    res.status(500).json({ 
+      message: `Error fetching games by preset filter: ${req.params.filterType}`, 
+      error: e.message 
+    });
+  }
+};
+
 
 module.exports = {
   getGames,
@@ -1351,4 +1950,7 @@ module.exports = {
   getGamesByRating,
   getGamesByPrice,
   getGamesByFeature,
+  getGamesByFilterType,
+  enrichGameData,
 };
+

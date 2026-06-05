@@ -19,5 +19,6 @@ app.get('/', (req, res) => res.json({ message: 'Welcome to Steam Clone API' }));
 // Route modules add kiye:
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/v1/games', require('./routes/gameRoutes'));
+app.use('/api/v1/search/games', require('./routes/searchRoutes'));
 
 module.exports = app;
