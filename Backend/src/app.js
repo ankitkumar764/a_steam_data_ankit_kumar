@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const gameRoutes = require('./routes/gameRoutes');
 const searchRoutes = require('./routes/searchRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 // Mount routes
 app.use('/api/v1/games', gameRoutes);
 app.use('/api/v1/search', searchRoutes);
+app.use('/api/v1/auth', authRoutes);
 
 // Basic Health Check API
 app.get('/api/v1/health', (req, res) => {
