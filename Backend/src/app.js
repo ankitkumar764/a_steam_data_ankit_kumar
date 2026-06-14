@@ -9,6 +9,8 @@ const jwtRoutes = require('./routes/jwtRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const protectedRoutes = require('./routes/protectedRoutes');
 const middlewareRoutes = require('./routes/middlewareRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
+const statsRoutes = require('./routes/statsRoutes');
 
 const requestLogger = require('./middlewares/loggerMiddleware');
 
@@ -30,6 +32,8 @@ app.use('/api/v1/jwt', jwtRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/protected', protectedRoutes);
 app.use('/api/v1/middleware', middlewareRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
+app.use('/api/v1/stats', statsRoutes);
 
 // Basic Health Check API
 app.get('/api/v1/health', (req, res) => {
