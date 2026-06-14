@@ -14,8 +14,8 @@ const getGames = catchAsync(async (req, res) => {
     });
   }
 
-  // Pass req.query for dynamic query parameter filtering
-  const result = await gameService.getAllGames(page, limit, req.query);
+  // Pass req.query and sort option for dynamic filtering and sorting
+  const result = await gameService.getAllGames(page, limit, req.query, req.query.sort);
   
   res.status(200).json({
     success: true,
@@ -391,4 +391,75 @@ module.exports = {
   getGamesByRating,
   getGamesByPrice,
   getGamesByFeature
+};
+
+// Dynamic Filter Group factory
+const getGamesByFilterGroup = (filterKey) => catchAsync(async (req, res) => {
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+  
+  const filters = {};
+  if (filterKey === 'free-to-play') filters.freeToPlay = true;
+  else if (filterKey === 'paid') filters.minPrice = '0.01'; // price > 0
+  else if (filterKey === 'discounted') filters.discount = true;
+  else if (filterKey === 'early-access') filters.genre = 'Early Access';
+  else if (filterKey === 'vr-only') filters.tag = 'VR';
+  else if (filterKey === 'controller-support') filters.feature = 'Controller';
+  else if (filterKey === 'multiplayer') filters.multiplayer = true;
+  else if (filterKey === 'singleplayer') filters.feature = 'Single-player';
+  else if (filterKey === 'coop') filters.tag = 'Co-op';
+  else if (filterKey === 'open-world') filters.tag = 'Open World';
+  else if (filterKey === 'survival') filters.tag = 'Survival';
+  else if (filterKey === 'horror') filters.tag = 'Horror';
+  else if (filterKey === 'anime') filters.tag = 'Anime';
+  else if (filterKey === 'indie') filters.genre = 'Indie';
+  else if (filterKey === 'top-rated') filters.rating = 8; // rating threshold 8 maps to recommendations >= 8000
+  
+  const result = await gameService.getAllGames(page, limit, filters);
+  res.status(200).json({
+    success: true,
+    message: `Games filtered by group '${filterKey}' retrieved successfully`,
+    data: result.games,
+    pagination: result.pagination
+  });
+});
+
+// Dynamic Sort route factory
+const getSortedGames = (sortOption) => catchAsync(async (req, res) => {
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+  
+  // Combines route sorting with query parameter filtering
+  const result = await gameService.getAllGames(page, limit, req.query, sortOption);
+  res.status(200).json({
+    success: true,
+    message: `Games sorted by '${sortOption}' retrieved successfully`,
+    data: result.games,
+    pagination: result.pagination
+  });
+});
+
+module.exports = {
+  getGames,
+  getGameDetails,
+  createNewGame,
+  replaceGameDetails,
+  updateGameDetails,
+  deleteGame,
+  checkExists,
+  getSummary,
+  archiveGame,
+  restoreGame,
+  getGameHistory,
+  getGamesByGenre,
+  getGamesByDeveloper,
+  getGamesByPublisher,
+  getGamesByPlatform,
+  getGamesByTag,
+  getGamesByReleaseYear,
+  getGamesByRating,
+  getGamesByPrice,
+  getGamesByFeature,
+  getGamesByFilterGroup,
+  getSortedGames
 };

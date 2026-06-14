@@ -35,6 +35,30 @@ router.route('/:appid/reviews/:reviewId')
   .patch(reviewController.updateReview)
   .delete(reviewController.deleteReview);
 
+// Game Filter Groups (placed before route parameters and generic routes to prevent conflicts)
+router.get('/filter/free-to-play', gameController.getGamesByFilterGroup('free-to-play'));
+router.get('/filter/paid', gameController.getGamesByFilterGroup('paid'));
+router.get('/filter/discounted', gameController.getGamesByFilterGroup('discounted'));
+router.get('/filter/early-access', gameController.getGamesByFilterGroup('early-access'));
+router.get('/filter/vr-only', gameController.getGamesByFilterGroup('vr-only'));
+router.get('/filter/controller-support', gameController.getGamesByFilterGroup('controller-support'));
+router.get('/filter/multiplayer', gameController.getGamesByFilterGroup('multiplayer'));
+router.get('/filter/singleplayer', gameController.getGamesByFilterGroup('singleplayer'));
+router.get('/filter/coop', gameController.getGamesByFilterGroup('coop'));
+router.get('/filter/open-world', gameController.getGamesByFilterGroup('open-world'));
+router.get('/filter/survival', gameController.getGamesByFilterGroup('survival'));
+router.get('/filter/horror', gameController.getGamesByFilterGroup('horror'));
+router.get('/filter/anime', gameController.getGamesByFilterGroup('anime'));
+router.get('/filter/indie', gameController.getGamesByFilterGroup('indie'));
+router.get('/filter/top-rated', gameController.getGamesByFilterGroup('top-rated'));
+
+// Game Sort Descs
+router.get('/sort/price-desc', gameController.getSortedGames('price-desc'));
+router.get('/sort/rating-desc', gameController.getSortedGames('rating-desc'));
+router.get('/sort/downloads-desc', gameController.getSortedGames('downloads-desc'));
+router.get('/sort/releaseDate-desc', gameController.getSortedGames('releaseDate-desc'));
+router.get('/sort/popularity-desc', gameController.getSortedGames('popularity-desc'));
+
 // Route parameter filters (placed before generic /:appid route to prevent route parameter collision)
 router.get('/genre/:genre', gameController.getGamesByGenre);
 router.get('/developer/:developer', gameController.getGamesByDeveloper);

@@ -1,19 +1,27 @@
 const Game = require('../models/gameModel');
 const buildFilter = require('../utils/filterBuilder');
+const buildSort = require('../utils/sortBuilder');
 
 /**
- * Fetch all games with pagination support and filtering
+ * Fetch all games with pagination support, filtering, and sorting
  * @param {number} page - Page number
  * @param {number} limit - Limit of records per page
  * @param {Object} filters - Filter criteria
+ * @param {string} sortOption - Sort settings keyword
  * @returns {Promise<Object>} - Paginated games object
  */
-const getAllGames = async (page = 1, limit = 10, filters = {}) => {
+const getAllGames = async (page = 1, limit = 10, filters = {}, sortOption = '') => {
   const skip = (page - 1) * limit;
   const query = buildFilter(filters);
+  const sort = buildSort(sortOption);
 
   const [games, totalItems] = await Promise.all([
-    Game.find(query).skip(skip).limit(limit).lean(),
+    Game.find(query)
+      .collation({ locale: 'en', numericOrdering: true })
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .lean(),
     Game.countDocuments(query)
   ]);
 
@@ -189,6 +197,51 @@ const getGameHistoryByAppid = async (appid) => {
   return game ? game.history : null;
 };
 
+/**
+ * Search games by title, genres, developer, or publisher using regex (case-insensitive)
+ * @param {string} searchQuery - Search query string
+ * @param {number} page - Page number
+ * @param {number} limit - Limit of records per page
+ * @returns {Promise<Object>} - Paginated search results
+ */
+const searchGames = async (searchQuery, page = 1, limit = 10) => {
+  const skip = (page - 1) * limit;
+  
+  if (!searchQuery) {
+    return {
+      games: [],
+      pagination: { page: Number(page), limit: Number(limit), totalPages: 0, totalItems: 0 }
+    };
+  }
+
+  const query = {
+    isDeleted: { $ne: true },
+    $or: [
+      { name: { $regex: new RegExp(searchQuery, 'i') } },
+      { genres: { $regex: new RegExp(searchQuery, 'i') } },
+      { developer: { $regex: new RegExp(searchQuery, 'i') } },
+      { publisher: { $regex: new RegExp(searchQuery, 'i') } }
+    ]
+  };
+
+  const [games, totalItems] = await Promise.all([
+    Game.find(query).skip(skip).limit(limit).lean(),
+    Game.countDocuments(query)
+  ]);
+
+  const totalPages = Math.ceil(totalItems / limit);
+
+  return {
+    games,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      totalPages,
+      totalItems
+    }
+  };
+};
+
 module.exports = {
   getAllGames,
   getGameByAppid,
@@ -200,5 +253,6 @@ module.exports = {
   getGameSummaryByAppid,
   archiveGameByAppid,
   restoreGameByAppid,
-  getGameHistoryByAppid
+  getGameHistoryByAppid,
+  searchGames
 };

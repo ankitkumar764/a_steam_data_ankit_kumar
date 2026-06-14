@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const gameRoutes = require('./routes/gameRoutes');
+const searchRoutes = require('./routes/searchRoutes');
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Mount routes
 app.use('/api/v1/games', gameRoutes);
+app.use('/api/v1/search', searchRoutes);
 
 // Basic Health Check API
 app.get('/api/v1/health', (req, res) => {
