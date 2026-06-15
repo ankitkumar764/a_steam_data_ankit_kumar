@@ -1,0 +1,7 @@
+dist
+node_modules
+package-lock.json
+.eslintrc.cjs
+eslint.config.js
+postcss.config.js
+tailwind.config.js
