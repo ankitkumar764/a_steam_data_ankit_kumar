@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
+import ProtectedRoute from './ProtectedRoute';
 
 import Login from '../pages/Login';
 import Register from '../pages/Register';
@@ -17,12 +18,14 @@ const AppRoutes = () => {
       <Route path={ROUTES.LOGIN} element={<Login />} />
       <Route path={ROUTES.REGISTER} element={<Register />} />
 
-      {/* Protected Routes (guards will be added in PR 7) */}
-      <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-      <Route path={ROUTES.USERS} element={<Users />} />
-      <Route path={ROUTES.PROFILE} element={<Profile />} />
-      <Route path={ROUTES.SETTINGS} element={<Settings />} />
-      <Route path={ROUTES.ANALYTICS} element={<Analytics />} />
+      {/* Protected Routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
+        <Route path={ROUTES.USERS} element={<Users />} />
+        <Route path={ROUTES.PROFILE} element={<Profile />} />
+        <Route path={ROUTES.SETTINGS} element={<Settings />} />
+        <Route path={ROUTES.ANALYTICS} element={<Analytics />} />
+      </Route>
 
       {/* Redirections */}
       <Route path="/" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
