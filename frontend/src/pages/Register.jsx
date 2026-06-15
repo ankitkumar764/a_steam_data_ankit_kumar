@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { 
   TextField, 
   Button, 
@@ -9,15 +10,35 @@ import {
   Typography, 
   Box, 
   IconButton, 
-  InputAdornment 
+  InputAdornment,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { ROUTES } from '../constants/routes';
+import { registerUser, clearError } from '../store/slices/authSlice';
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // Select values from auth slice
+  const { isLoading, error, token } = useSelector((state) => state.auth);
+
+  // Clear previous errors when page mounts
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
+
+  // Navigate to dashboard if already logged in
+  useEffect(() => {
+    if (token) {
+      navigate(ROUTES.DASHBOARD);
+    }
+  }, [token, navigate]);
 
   const formik = useFormik({
     initialValues: {
@@ -41,8 +62,17 @@ const Register = () => {
         .required('Confirm your password'),
     }),
     onSubmit: (values) => {
-      console.log('Register Form Submit:', values);
-      // Register API logic will be integrated in PR 6
+      // Exclude confirmPassword before dispatching to API
+      const { username, email, password } = values;
+      dispatch(registerUser({ username, email, password }))
+        .unwrap()
+        .then(() => {
+          // Redirect to Login page upon successful registration
+          navigate(ROUTES.LOGIN);
+        })
+        .catch((err) => {
+          console.error('Registration failed:', err);
+        });
     },
   });
 
@@ -72,6 +102,13 @@ const Register = () => {
               Join to check Steam game statistics
             </Typography>
           </Box>
+
+          {/* Error display */}
+          {error && (
+            <Alert severity="error" className="mb-4 rounded-xl" sx={{ mb: 2, borderRadius: '0.75rem' }}>
+              {error}
+            </Alert>
+          )}
 
           {/* Form */}
           <form onSubmit={formik.handleSubmit} className="space-y-4">
@@ -214,7 +251,8 @@ const Register = () => {
               variant="contained"
               fullWidth
               type="submit"
-              className="py-3 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 transition-colors uppercase tracking-wider"
+              disabled={isLoading}
+              className="py-3 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 transition-colors uppercase tracking-wider flex justify-center items-center"
               sx={{ 
                 bgcolor: '#4f46e5', 
                 color: '#ffffff', 
@@ -225,7 +263,7 @@ const Register = () => {
                 '&:hover': { bgcolor: '#6366f1' } 
               }}
             >
-              Sign Up
+              {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
             </Button>
           </form>
 

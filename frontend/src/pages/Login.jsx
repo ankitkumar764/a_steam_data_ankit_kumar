@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { 
   TextField, 
   Button, 
@@ -9,14 +10,34 @@ import {
   Typography, 
   Box, 
   IconButton, 
-  InputAdornment 
+  InputAdornment,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import { ROUTES } from '../constants/routes';
+import { loginUser, clearError } from '../store/slices/authSlice';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  
+  // Select values from auth slice
+  const { isLoading, error, token } = useSelector((state) => state.auth);
+
+  // Clear previous errors when page mounts
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
+
+  // Navigate to dashboard if logged in
+  useEffect(() => {
+    if (token) {
+      navigate(ROUTES.DASHBOARD);
+    }
+  }, [token, navigate]);
 
   const formik = useFormik({
     initialValues: {
@@ -31,8 +52,7 @@ const Login = () => {
         .required('Password is required'),
     }),
     onSubmit: (values) => {
-      console.log('Login Form Submit:', values);
-      // Auth service logic will be integrated in PR 6
+      dispatch(loginUser(values));
     },
   });
 
@@ -62,6 +82,13 @@ const Login = () => {
               Sign in to manage your Steam games data
             </Typography>
           </Box>
+
+          {/* Error display */}
+          {error && (
+            <Alert severity="error" className="mb-4 rounded-xl" sx={{ mb: 2, borderRadius: '0.75rem' }}>
+              {error}
+            </Alert>
+          )}
 
           {/* Form */}
           <form onSubmit={formik.handleSubmit} className="space-y-4">
@@ -137,7 +164,8 @@ const Login = () => {
               variant="contained"
               fullWidth
               type="submit"
-              className="py-3 rounded-xl font-bold bg-cyan-600 hover:bg-cyan-500 transition-colors uppercase tracking-wider"
+              disabled={isLoading}
+              className="py-3 rounded-xl font-bold bg-cyan-600 hover:bg-cyan-500 transition-colors uppercase tracking-wider flex justify-center items-center"
               sx={{ 
                 bgcolor: '#0891b2', 
                 color: '#ffffff', 
@@ -148,7 +176,7 @@ const Login = () => {
                 '&:hover': { bgcolor: '#06b6d4' } 
               }}
             >
-              Sign In
+              {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
             </Button>
           </form>
 
