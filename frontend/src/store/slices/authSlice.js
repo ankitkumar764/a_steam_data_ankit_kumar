@@ -1,13 +1,32 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
-// Helper to load initial auth state from localStorage
+// Helper to load initial auth state from localStorage safely
 const storedToken = localStorage.getItem('token');
 const storedUser = localStorage.getItem('user');
 
+const getInitialUser = () => {
+  if (!storedUser || storedUser === 'undefined' || storedUser === 'null') {
+    return null;
+  }
+  try {
+    return JSON.parse(storedUser);
+  } catch (e) {
+    console.error('Error parsing stored user:', e);
+    return null;
+  }
+};
+
+const getInitialToken = () => {
+  if (!storedToken || storedToken === 'undefined' || storedToken === 'null') {
+    return null;
+  }
+  return storedToken;
+};
+
 const initialState = {
-  user: storedUser ? JSON.parse(storedUser) : null,
-  token: storedToken || null,
+  user: getInitialUser(),
+  token: getInitialToken(),
   isLoading: false,
   error: null,
 };
@@ -18,7 +37,8 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await api.post('/auth/login', credentials);
-      const { token, user } = response.data;
+      // Backend response sends data inside 'data' field: { success, message, data: { token, user } }
+      const { token, user } = response.data.data;
       
       // Save details to localStorage
       localStorage.setItem('token', token);

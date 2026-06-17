@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "8aaf5e82-c550-4470-92cb-cbac05c26bbc",
     "name": "Steam Games API Collection",
-    "description": "Postman collection for testing the Steam Games MVC API endpoints including CRUD, filters, JWT authentication, custom middlewares, analytics, and stats.",
+    "description": "Comprehensive Postman collection for testing the Steam Games MVC API endpoints including CRUD, filters, JWT authentication, custom middlewares, analytics, and stats.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -19,14 +19,19 @@
                 "value": "application/json"
               }
             ],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"test_user_dev\",\n  \"email\": \"test_user@example.com\",\n  \"password\": \"password123\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "register"]
             }
           }
         },
@@ -40,14 +45,140 @@
                 "value": "application/json"
               }
             ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"test_user@example.com\",\n  \"password\": \"password123\"\n}"
-            },
+            }
+          }
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "method": "POST",
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/send-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "send-otp"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test_user@example.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify Email OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/verify-email",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "verify-email"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test_user@example.com\",\n  \"otp\": \"123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Forgot Password Reset Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test_user@example.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reset Password with OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test_user@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"newpassword123\"\n}"
             }
           }
         },
@@ -63,8 +194,73 @@
             ],
             "url": {
               "raw": "{{base_url}}/auth/profile",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "profile"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "profile"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"test_user_updated\",\n  \"email\": \"test_user_updated@example.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/change-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"password123\",\n  \"newPassword\": \"newpassword123\"\n}"
             }
           }
         }
@@ -80,11 +276,136 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/games?page=1&limit=10",
-              "host": ["{{base_url}}"],
-              "path": ["games"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Game Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/games",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appid\": \"999999\",\n  \"name\": \"Portal 3\",\n  \"genres\": \"Action;Adventure;Puzzle\",\n  \"price\": \"29.99\",\n  \"recommendations\": \"150000\",\n  \"developer\": \"Valve\",\n  \"publisher\": \"Valve\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Check Game Exists",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/exists/:appid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                "exists",
+                ":appid"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Game Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/summary",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "summary"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Game History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "history"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Archive Game",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/archive",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "archive"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Restore Game",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/restore",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "restore"
               ]
             }
           }
@@ -95,28 +416,1647 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/games/10",
-              "host": ["{{base_url}}"],
-              "path": ["games", "10"]
+              "raw": "{{base_url}}/games/:appid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid"
+              ]
             }
           }
         },
         {
-          "name": "Create Game (Protected)",
+          "name": "Replace Game Details",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/games/:appid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appid\": \"10\",\n  \"name\": \"Counter-Strike Updated\",\n  \"genres\": \"Action\",\n  \"price\": \"9.99\",\n  \"recommendations\": \"120000\",\n  \"developer\": \"Valve\",\n  \"publisher\": \"Valve\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Game Details",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/games/:appid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": \"14.99\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Game Permanently",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Game Sub-resources",
+      "item": [
+        {
+          "name": "Get Screenshots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/screenshots",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "screenshots"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Trailers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/trailers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "trailers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get System Requirements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/system-requirements",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "system-requirements"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get DLC List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/dlc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "dlc"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Achievements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/achievements",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "achievements"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Leaderboards",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/leaderboards",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "leaderboards"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Updates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/updates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "updates"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get News",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/news",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "news"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Related Recommendations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/related",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "related"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Game Reviews",
+      "item": [
+        {
+          "name": "Get Reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/reviews",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "reviews"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Review",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/reviews",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "reviews"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"appid\": \"999999\",\n  \"name\": \"Portal 3\",\n  \"genres\": \"Action;Adventure;Puzzle\",\n  \"price\": \"29.99\",\n  \"recommendations\": \"150000\",\n  \"developer\": \"Valve\",\n  \"publisher\": \"Valve\"\n}"
-            },
+              "raw": "{\n  \"rating\": 9,\n  \"reviewText\": \"Awesome gameplay and graphics!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Review",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/protected/games",
-              "host": ["{{base_url}}"],
-              "path": ["protected", "games"]
+              "raw": "{{base_url}}/games/:appid/reviews/:reviewId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "reviews",
+                ":reviewId"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 10,\n  \"reviewText\": \"Updated review text: Absolutely brilliant game!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/games/:appid/reviews/:reviewId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "games",
+                ":appid",
+                "reviews",
+                ":reviewId"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Filters & Sorting",
+      "item": [
+        {
+          "name": "Predefined Filters",
+          "item": [
+            {
+              "name": "Free to Play",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/free-to-play",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "free-to-play"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Paid",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/paid",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "paid"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Discounted",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/discounted",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "discounted"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Early Access",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/early-access",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "early-access"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "VR Only",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/vr-only",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "vr-only"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Controller Support",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/controller-support",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "controller-support"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Multiplayer",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/multiplayer",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "multiplayer"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Singleplayer",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/singleplayer",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "singleplayer"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Co-op",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/coop",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "coop"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Open World",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/open-world",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "open-world"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Survival",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/survival",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "survival"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Horror",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/horror",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "horror"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Anime",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/anime",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "anime"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Indie",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/indie",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "indie"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Top Rated",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/filter/top-rated",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "filter",
+                    "top-rated"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sorting Routes",
+          "item": [
+            {
+              "name": "Price Descending",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/sort/price-desc",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "sort",
+                    "price-desc"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Rating Descending",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/sort/rating-desc",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "sort",
+                    "rating-desc"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Downloads Descending",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/sort/downloads-desc",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "sort",
+                    "downloads-desc"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Release Date Descending",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/sort/releaseDate-desc",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "sort",
+                    "releaseDate-desc"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Popularity Descending",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/sort/popularity-desc",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "sort",
+                    "popularity-desc"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Sort Query Param: Price Asc",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?sort=price",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "sort",
+                      "value": "price"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Sort Query Param: Rating Asc",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?sort=rating",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "sort",
+                      "value": "rating"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Sort Query Param: Downloads Asc",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?sort=downloads",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "sort",
+                      "value": "downloads"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Sort Query Param: ReleaseDate Asc",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?sort=releaseDate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "sort",
+                      "value": "releaseDate"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Sort Query Param: Title Asc",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?sort=title",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "sort",
+                      "value": "title"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Parameter Filters",
+          "item": [
+            {
+              "name": "By Genre",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/genre/:genre",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "genre",
+                    ":genre"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "By Developer",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/developer/:developer",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "developer",
+                    ":developer"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "By Publisher",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/publisher/:publisher",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "publisher",
+                    ":publisher"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "By Platform",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/platform/:platform",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "platform",
+                    ":platform"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "By Tag",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/tag/:tag",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "tag",
+                    ":tag"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "By Release Year",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/release-year/:year",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "release-year",
+                    ":year"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "By Rating",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/rating/:rating",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "rating",
+                    ":rating"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "By Price",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/price/:price",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "price",
+                    ":price"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "By Feature",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games/feature/:feature",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games",
+                    "feature",
+                    ":feature"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Query Filters",
+          "item": [
+            {
+              "name": "Filter Genre",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?genre=action",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "genre",
+                      "value": "action"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Filter Developer",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?developer=valve",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "developer",
+                      "value": "valve"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Filter Publisher",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?publisher=valve",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "publisher",
+                      "value": "valve"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Filter Platform",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?platform=windows",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "platform",
+                      "value": "windows"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Filter Tag",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?tag=multiplayer",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "tag",
+                      "value": "multiplayer"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Filter minPrice",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?minPrice=10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "minPrice",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Filter maxPrice",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?maxPrice=50",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "maxPrice",
+                      "value": "50"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Filter Rating",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?rating=8",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "rating",
+                      "value": "8"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Filter Release Year",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?releaseYear=2020",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "releaseYear",
+                      "value": "2020"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Filter Discounted",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?discount=true",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "discount",
+                      "value": "true"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Filter Multiplayer",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?multiplayer=true",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "multiplayer",
+                      "value": "true"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Filter Free to Play",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?freeToPlay=true",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "freeToPlay",
+                      "value": "true"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Combination Queries",
+          "item": [
+            {
+              "name": "Genre and Sort",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?genre=action&sort=rating",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "genre",
+                      "value": "action"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "rating"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Platform and Sort",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?platform=windows&sort=downloads",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "platform",
+                      "value": "windows"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "downloads"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Developer and Sort",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?developer=valve&sort=releaseDate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "developer",
+                      "value": "valve"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "releaseDate"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Free to Play and Sort",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?freeToPlay=true&sort=popularity",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "freeToPlay",
+                      "value": "true"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "popularity"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Multiplayer and Sort",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?multiplayer=true&sort=rating",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "multiplayer",
+                      "value": "true"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "rating"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Genre and Pagination",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?genre=horror&page=1&limit=10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "genre",
+                      "value": "horror"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Genre, Sort and Pagination",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?genre=survival&sort=downloads&page=1&limit=10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "genre",
+                      "value": "survival"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "downloads"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Platform, Rating and Pagination",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?platform=linux&rating=8&page=1&limit=15",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "platform",
+                      "value": "linux"
+                    },
+                    {
+                      "key": "rating",
+                      "value": "8"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "15"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Developer, Price and Sort",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?developer=ea&minPrice=20&sort=price&page=1&limit=10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "developer",
+                      "value": "ea"
+                    },
+                    {
+                      "key": "minPrice",
+                      "value": "20"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "price"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Tag, Sort and Pagination",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/games?tag=co-op&sort=rating&page=1&limit=20",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "games"
+                  ],
+                  "query": [
+                    {
+                      "key": "tag",
+                      "value": "co-op"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "rating"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Search Games: elden",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/search/games?q=elden",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "search",
+                "games"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "elden"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Games: cyberpunk",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/search/games?q=cyberpunk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "search",
+                "games"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "cyberpunk"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Games: multiplayer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/search/games?q=multiplayer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "search",
+                "games"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "multiplayer"
+                }
+              ]
             }
           }
         }
@@ -126,14 +2066,56 @@
       "name": "Analytics",
       "item": [
         {
-          "name": "Top Rated Games",
+          "name": "Top Rated Games Analytics",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/analytics/games/top-rated",
-              "host": ["{{base_url}}"],
-              "path": ["analytics", "games", "top-rated"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                "games",
+                "top-rated"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Most Downloaded Games Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/games/most-downloaded",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                "games",
+                "most-downloaded"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Revenue Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/games/revenue",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                "games",
+                "revenue"
+              ]
             }
           }
         },
@@ -144,8 +2126,122 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/analytics/games/platform-distribution",
-              "host": ["{{base_url}}"],
-              "path": ["analytics", "games", "platform-distribution"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                "games",
+                "platform-distribution"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Genre Distribution",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/games/genre-distribution",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                "games",
+                "genre-distribution"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Trending Games Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/games/trending",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                "games",
+                "trending"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Release Trends",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/games/release-trends",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                "games",
+                "release-trends"
+              ]
+            }
+          }
+        },
+        {
+          "name": "User Review Activity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/games/user-activity",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                "games",
+                "user-activity"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Wishlist Analysis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/games/wishlist-analysis",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                "games",
+                "wishlist-analysis"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Review Metrics Analysis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/analytics/games/review-analysis",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "analytics",
+                "games",
+                "review-analysis"
+              ]
             }
           }
         }
@@ -155,30 +2251,637 @@
       "name": "Statistics",
       "item": [
         {
-          "name": "Total Active Games Count",
+          "name": "Total Games Count",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/stats/games/count",
-              "host": ["{{base_url}}"],
-              "path": ["stats", "games", "count"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "games",
+                "count"
+              ]
             }
           }
         },
         {
-          "name": "Average Price Statistics",
+          "name": "Top Rated Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats/games/top-rated",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "games",
+                "top-rated"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Most Downloaded Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats/games/most-downloaded",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "games",
+                "most-downloaded"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Average Price Stats",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/stats/games/average-price",
-              "host": ["{{base_url}}"],
-              "path": ["stats", "games", "average-price"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "games",
+                "average-price"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Average Rating Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats/games/average-rating",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "games",
+                "average-rating"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Count by Genre Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats/games/genre-count",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "games",
+                "genre-count"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Platform Count Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats/games/platform-count",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "games",
+                "platform-count"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Free-to-Play Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats/games/free-to-play-count",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "games",
+                "free-to-play-count"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Multiplayer Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats/games/multiplayer-count",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "games",
+                "multiplayer-count"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Monthly Releases Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats/games/monthly-releases",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "games",
+                "monthly-releases"
+              ]
             }
           }
         }
       ]
+    },
+    {
+      "name": "JWT Utilities",
+      "item": [
+        {
+          "name": "Generate JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jwt/generate-token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jwt",
+                "generate-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jwt/verify-token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jwt",
+                "verify-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{jwt_token}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh JWT Access Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jwt/refresh-token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jwt",
+                "refresh-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{jwt_token}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Revoke JWT Token",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jwt/revoke-token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jwt",
+                "revoke-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{jwt_token}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Access JWT Protected Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jwt/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jwt",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Access JWT Protected Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jwt/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jwt",
+                "dashboard"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Access Protected Games",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jwt/private-games",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jwt",
+                "private-games"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Access Protected Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jwt/private-analytics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jwt",
+                "private-analytics"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Protected",
+      "item": [
+        {
+          "name": "Admin Get Games",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/games",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "games"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin Get Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/analytics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "analytics"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin Get Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/reports",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "reports"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Protected Games Management",
+      "item": [
+        {
+          "name": "Protected Create Game",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/protected/games",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "protected",
+                "games"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appid\": \"999999\",\n  \"name\": \"Portal 3\",\n  \"genres\": \"Action;Adventure;Puzzle\",\n  \"price\": \"29.99\",\n  \"recommendations\": \"150000\",\n  \"developer\": \"Valve\",\n  \"publisher\": \"Valve\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Protected Update Game",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/protected/games/:appid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "protected",
+                "games",
+                ":appid"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": \"19.99\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Protected Delete Game",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/protected/games/:appid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "protected",
+                "games",
+                ":appid"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Middleware Demonstration",
+      "item": [
+        {
+          "name": "Request Logger Test",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/middleware/logger",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "middleware",
+                "logger"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Authentication Middleware Test",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/middleware/auth",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "middleware",
+                "auth"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Rate Limiting Test (max 3 req/min)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/middleware/rate-limit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "middleware",
+                "rate-limit"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Global Error Handler Test",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/middleware/error-handler",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "middleware",
+                "error-handler"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "API Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        }
+      }
     }
   ],
   "event": [
@@ -186,7 +2889,11 @@
       "listen": "prerequest",
       "script": {
         "type": "text/javascript",
-        "exec": ["pm.globals.set(\"base_url\", \"https://a-steam-data-ankit-kumar.onrender.com/api/v1\");"]
+        "exec": [
+          "if (!pm.globals.get(\"base_url\")) {",
+          "  pm.globals.set(\"base_url\", \"https://a-steam-data-ankit-kumar.onrender.com/api/v1\");",
+          "}"
+        ]
       }
     }
   ]

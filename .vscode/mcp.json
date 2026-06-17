@@ -1,0 +1,15 @@
+{
+    "servers": {
+        "postman": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "-y",
+                "@postman/postman-mcp-server"
+            ],
+            "env": {
+                "POSTMAN_API_KEY": ""
+            }
+        }
+    }
+}
