@@ -1,55 +1,159 @@
-import { useSelector } from 'react-redux';
-import { 
-  Notifications as NotificationsIcon,
-  AccountCircle as AccountIcon,
-  Search as SearchIcon
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Menu,
+  MenuItem,
+  Badge,
+  Avatar,
+  Box,
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Brightness4,
+  Brightness7,
+  Notifications,
+  AccountCircle,
+  SportsEsports,
 } from '@mui/icons-material';
+import { logoutUser } from '../store/slices/authSlice';
 
-const Navbar = () => {
-  const { user } = useSelector((state) => state.auth);
+export const Navbar = ({ onMobileNavToggle, currentTheme, onThemeToggle }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleProfileRedirect = () => {
+    handleMenuClose();
+    navigate('/profile');
+  };
+
+  const handleSettingsRedirect = () => {
+    handleMenuClose();
+    navigate('/settings');
+  };
+
+  const handleLogout = () => {
+    handleMenuClose();
+    dispatch(logoutUser()).then(() => {
+      navigate('/login');
+    });
+  };
 
   return (
-    <header className="fixed top-0 right-0 z-10 flex h-16 w-[calc(100%-16rem)] items-center justify-between border-b border-slate-800 bg-slate-900 px-8 text-slate-100 transition-all duration-300">
-      {/* Title/Greeting */}
-      <div>
-        <h2 className="text-sm font-medium text-slate-400">Welcome,</h2>
-        <h1 className="text-lg font-bold text-white tracking-tight">
-          {user ? user.username : 'Administrator'}
-        </h1>
-      </div>
+    <AppBar
+      position="sticky"
+      elevation={0}
+      className="bg-slate-900 border-b border-slate-800 text-white z-40"
+      sx={{ backgroundColor: '#0f172a' }} // Force dark background matching Slate 900
+    >
+      <Toolbar className="flex justify-between px-4 sm:px-6">
+        <Box className="flex items-center space-x-2">
+          {isAuthenticated && (
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={onMobileNavToggle}
+              className="lg:hidden mr-2"
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+          <SportsEsports className="text-cyan-400 h-8 w-8" />
+          <Typography
+            variant="h6"
+            noWrap
+            component={Link}
+            to="/"
+            className="font-bold tracking-wider text-xl bg-gradient-to-r from-cyan-400 to-indigo-500 bg-clip-text text-transparent hover:opacity-90"
+            style={{ textDecoration: 'none' }}
+          >
+            STEAMAX
+          </Typography>
+        </Box>
 
-      {/* Right Controls */}
-      <div className="flex items-center gap-6">
-        {/* Search Input Bar Placeholder */}
-        <div className="relative hidden md:block">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
-            <SearchIcon sx={{ fontSize: 20 }} />
-          </span>
-          <input
-            type="text"
-            placeholder="Search game catalog..."
-            className="w-64 rounded-xl border border-slate-800 bg-slate-950 py-2 pl-10 pr-4 text-xs font-semibold text-slate-100 placeholder-slate-500 transition-colors focus:border-cyan-500 focus:outline-none"
-          />
-        </div>
+        <Box className="flex items-center space-x-4">
+          <IconButton color="inherit" onClick={onThemeToggle} className="text-slate-300 hover:text-white">
+            {currentTheme === 'dark' ? <Brightness7 /> : <Brightness4 />}
+          </IconButton>
 
-        {/* Notifications Button */}
-        <button className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition-colors">
-          <NotificationsIcon sx={{ fontSize: 20 }} />
-          <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-cyan-500"></span>
-        </button>
+          {isAuthenticated ? (
+            <>
+              <IconButton color="inherit" className="text-slate-300 hover:text-white">
+                <Badge badgeContent={3} color="error">
+                  <Notifications />
+                </Badge>
+              </IconButton>
 
-        {/* Profile Avatar Dropdown wrapper */}
-        <div className="flex items-center gap-3 border-l border-slate-800 pl-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-600/10 text-cyan-400 border border-cyan-500/20">
-            <AccountIcon />
-          </div>
-          <div className="hidden lg:block">
-            <p className="text-xs font-bold text-white">{user ? user.username : 'Admin User'}</p>
-            <p className="text-[10px] font-semibold text-slate-500 capitalize">{user ? user.role || 'Admin' : 'Role'}</p>
-          </div>
-        </div>
-      </div>
-    </header>
+              <Box className="flex items-center space-x-2 cursor-pointer" onClick={handleMenuOpen}>
+                <Avatar
+                  className="bg-cyan-600 hover:scale-105 transition-transform"
+                  sx={{ width: 36, height: 36, fontSize: '0.95rem' }}
+                >
+                  {user?.username?.substring(0, 2).toUpperCase() || 'U'}
+                </Avatar>
+                <span className="hidden md:inline-block font-medium text-sm text-slate-300 hover:text-white">
+                  {user?.username || 'User'}
+                </span>
+              </Box>
+
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                PaperProps={{
+                  sx: {
+                    mt: 1.5,
+                    backgroundColor: '#1e293b',
+                    color: '#f8fafc',
+                    borderRadius: '12px',
+                    border: '1px border rgba(255,255,255,0.08)',
+                    minWidth: 160,
+                    '& .MuiMenuItem-root': {
+                      fontSize: '0.875rem',
+                      fontFamily: 'Inter',
+                      '&:hover': {
+                        backgroundColor: '#334155',
+                      },
+                    },
+                  },
+                }}
+              >
+                <MenuItem onClick={handleProfileRedirect}>My Profile</MenuItem>
+                <MenuItem onClick={handleSettingsRedirect}>Settings</MenuItem>
+                <hr className="my-1 border-slate-700" />
+                <MenuItem onClick={handleLogout} className="text-red-400 hover:text-red-300">
+                  Logout
+                </MenuItem>
+              </Menu>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className="rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-500 transition-all hover:scale-105 active:scale-95"
+            >
+              Sign In
+            </Link>
+          )}
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 };
 

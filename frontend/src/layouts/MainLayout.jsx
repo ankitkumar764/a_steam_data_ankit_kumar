@@ -1,20 +1,29 @@
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar';
 
-const MainLayout = () => {
+export const MainLayout = ({ theme, onThemeToggle }) => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleMobileNavToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased">
-      {/* Navigation Panels */}
-      <Sidebar />
-      <Navbar />
-
-      {/* Main scrolling layout container */}
-      <main className="pt-16 pl-64 min-h-screen transition-all duration-300">
-        <div className="p-8">
+    <div className="flex min-h-screen bg-slate-950 text-slate-100 transition-colors duration-200">
+      <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
+      
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Navbar
+          onMobileNavToggle={handleMobileNavToggle}
+          currentTheme={theme}
+          onThemeToggle={onThemeToggle}
+        />
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-slate-950 text-slate-200">
           <Outlet />
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };

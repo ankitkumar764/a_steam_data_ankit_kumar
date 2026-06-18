@@ -1,140 +1,97 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { 
-  TextField, 
-  Button, 
-  Paper, 
-  Typography, 
-  Box, 
-  IconButton, 
-  InputAdornment,
-  Alert,
-  CircularProgress
-} from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import { ROUTES } from '../constants/routes';
-import { registerUser, clearError } from '../store/slices/authSlice';
+import { Link, useNavigate } from 'react-router-dom';
+import { TextField, Button, Box, Typography, Paper, CircularProgress, MenuItem } from '@mui/material';
+import { registerUser, sendOtp } from '../store/slices/authSlice';
+import { useToast } from '../components/ToastNotification';
+import SEO from '../components/SEO';
 
-const Register = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const navigate = useNavigate();
+export const Register = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const showToast = useToast();
+  const { loading, isAuthenticated } = useSelector((state) => state.auth);
 
-  // Select values from auth slice
-  const { isLoading, error, token } = useSelector((state) => state.auth);
-
-  // Clear previous errors when page mounts
+  // Redirect if already authenticated
   useEffect(() => {
-    dispatch(clearError());
-  }, [dispatch]);
-
-  // Navigate to dashboard if already logged in
-  useEffect(() => {
-    if (token) {
-      navigate(ROUTES.DASHBOARD);
+    if (isAuthenticated) {
+      navigate('/dashboard');
     }
-  }, [token, navigate]);
+  }, [isAuthenticated, navigate]);
 
   const formik = useFormik({
     initialValues: {
       username: '',
       email: '',
       password: '',
-      confirmPassword: '',
+      role: 'user', // Default role selection
     },
     validationSchema: Yup.object({
-      username: Yup.string()
-        .min(3, 'Username must be at least 3 characters')
-        .required('Username is required'),
-      email: Yup.string()
-        .email('Invalid email address')
-        .required('Email is required'),
-      password: Yup.string()
-        .min(6, 'Password must be at least 6 characters')
-        .required('Password is required'),
-      confirmPassword: Yup.string()
-        .oneOf([Yup.ref('password'), null], 'Passwords must match')
-        .required('Confirm your password'),
+      username: Yup.string().required('Username is required').min(3, 'Username must be at least 3 characters'),
+      email: Yup.string().email('Invalid email address').required('Email is required'),
+      password: Yup.string().required('Password is required').min(6, 'Password must be at least 6 characters'),
+      role: Yup.string().oneOf(['user', 'admin']).required('Role is required'),
     }),
     onSubmit: (values) => {
-      // Exclude confirmPassword before dispatching to API
-      const { username, email, password } = values;
-      dispatch(registerUser({ username, email, password }))
+      dispatch(registerUser(values))
         .unwrap()
-        .then(() => {
-          // Redirect to Login page upon successful registration
-          navigate(ROUTES.LOGIN);
+        .then((res) => {
+          showToast('Account registered successfully! Generating verification code...', 'success');
+          // Automatically trigger OTP dispatch to the new user's email
+          dispatch(sendOtp({ email: values.email }))
+            .unwrap()
+            .then((otpRes) => {
+              showToast(`OTP generated: ${otpRes.otp} (Shown for development testing convenience)`, 'info');
+              navigate('/verify-email');
+            });
         })
         .catch((err) => {
-          console.error('Registration failed:', err);
+          showToast(err || 'Registration failed.', 'error');
         });
     },
   });
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4">
-      <div className="w-full max-w-md">
-        <Paper 
-          elevation={6}
-          className="p-8 rounded-2xl border border-slate-800 bg-slate-900"
-          sx={{ 
-            bgcolor: '#0f172a', 
-            color: '#f8fafc', 
-            borderRadius: '1.25rem', 
-            border: '1px solid #1e293b',
-            p: 4 
-          }}
+    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-12 sm:px-6 lg:px-8">
+      <SEO title="Create Account" description="Sign up to access Steamax and analyze catalog details and statistics charts." />
+
+      <div className="w-full max-w-md space-y-8">
+        <div className="flex flex-col items-center">
+          <h2 className="mt-6 text-center text-4xl font-extrabold tracking-tight text-white">
+            Create Account
+          </h2>
+          <p className="mt-2 text-center text-sm text-slate-400">
+            Sign up to track and aggregate game metrics
+          </p>
+        </div>
+
+        <Paper
+          elevation={24}
+          className="bg-slate-900 border border-slate-800 rounded-3xl p-8"
+          style={{ backgroundColor: '#1e293b' }}
         >
-          {/* Header */}
-          <Box className="flex flex-col items-center mb-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-400 mb-3 border border-indigo-500/20">
-              <PersonAddIcon sx={{ fontSize: 32 }} />
-            </div>
-            <Typography variant="h5" component="h1" className="font-bold text-white text-center">
-              Create Account
-            </Typography>
-            <Typography variant="body2" className="text-slate-400 text-center mt-1">
-              Join to check Steam game statistics
-            </Typography>
-          </Box>
-
-          {/* Error display */}
-          {error && (
-            <Alert severity="error" className="mb-4 rounded-xl" sx={{ mb: 2, borderRadius: '0.75rem' }}>
-              {error}
-            </Alert>
-          )}
-
-          {/* Form */}
-          <form onSubmit={formik.handleSubmit} className="space-y-4">
+          <form onSubmit={formik.handleSubmit} className="space-y-5">
             <TextField
               fullWidth
               id="username"
               name="username"
               label="Username"
-              variant="outlined"
               value={formik.values.username}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={formik.touched.username && Boolean(formik.errors.username)}
               helperText={formik.touched.username && formik.errors.username}
-              slotProps={{
-                input: { className: 'text-white' },
-                inputLabel: { className: 'text-slate-400' }
-              }}
+              variant="outlined"
+              InputLabelProps={{ style: { color: '#94a3b8' } }}
+              inputProps={{ style: { color: '#f8fafc' } }}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  '& fieldset': { borderColor: '#334155' },
-                  '&:hover fieldset': { borderColor: '#475569' },
-                  '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+                  '& fieldset': { borderColor: '#475569' },
+                  '&:hover fieldset': { borderColor: '#06b6d4' },
+                  '&.Mui-focused fieldset': { borderColor: '#06b6d4' },
                 },
-                '& .MuiInputLabel-root.Mui-focused': { color: '#6366f1' },
-                '& .MuiFormHelperText-root': { color: '#ef4444' }
               }}
             />
 
@@ -143,24 +100,20 @@ const Register = () => {
               id="email"
               name="email"
               label="Email Address"
-              variant="outlined"
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={formik.touched.email && Boolean(formik.errors.email)}
               helperText={formik.touched.email && formik.errors.email}
-              slotProps={{
-                input: { className: 'text-white' },
-                inputLabel: { className: 'text-slate-400' }
-              }}
+              variant="outlined"
+              InputLabelProps={{ style: { color: '#94a3b8' } }}
+              inputProps={{ style: { color: '#f8fafc' } }}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  '& fieldset': { borderColor: '#334155' },
-                  '&:hover fieldset': { borderColor: '#475569' },
-                  '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+                  '& fieldset': { borderColor: '#475569' },
+                  '&:hover fieldset': { borderColor: '#06b6d4' },
+                  '&.Mui-focused fieldset': { borderColor: '#06b6d4' },
                 },
-                '& .MuiInputLabel-root.Mui-focused': { color: '#6366f1' },
-                '& .MuiFormHelperText-root': { color: '#ef4444' }
               }}
             />
 
@@ -168,114 +121,71 @@ const Register = () => {
               fullWidth
               id="password"
               name="password"
-              label="Password (min 6 chars)"
-              type={showPassword ? 'text' : 'password'}
-              variant="outlined"
+              label="Password"
+              type="password"
               value={formik.values.password}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={formik.touched.password && Boolean(formik.errors.password)}
               helperText={formik.touched.password && formik.errors.password}
-              slotProps={{
-                input: {
-                  className: 'text-white',
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                        sx={{ color: '#94a3b8' }}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  )
-                },
-                inputLabel: { className: 'text-slate-400' }
-              }}
+              variant="outlined"
+              InputLabelProps={{ style: { color: '#94a3b8' } }}
+              inputProps={{ style: { color: '#f8fafc' } }}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  '& fieldset': { borderColor: '#334155' },
-                  '&:hover fieldset': { borderColor: '#475569' },
-                  '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+                  '& fieldset': { borderColor: '#475569' },
+                  '&:hover fieldset': { borderColor: '#06b6d4' },
+                  '&.Mui-focused fieldset': { borderColor: '#06b6d4' },
                 },
-                '& .MuiInputLabel-root.Mui-focused': { color: '#6366f1' },
-                '& .MuiFormHelperText-root': { color: '#ef4444' }
               }}
             />
 
             <TextField
               fullWidth
-              id="confirmPassword"
-              name="confirmPassword"
-              label="Confirm Password"
-              type={showConfirmPassword ? 'text' : 'password'}
-              variant="outlined"
-              value={formik.values.confirmPassword}
+              id="role"
+              name="role"
+              select
+              label="Account Role"
+              value={formik.values.role}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
-              helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
-              slotProps={{
-                input: {
-                  className: 'text-white',
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle confirm password visibility"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        edge="end"
-                        sx={{ color: '#94a3b8' }}
-                      >
-                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  )
-                },
-                inputLabel: { className: 'text-slate-400' }
-              }}
+              error={formik.touched.role && Boolean(formik.errors.role)}
+              helperText={formik.touched.role && formik.errors.role}
+              variant="outlined"
+              InputLabelProps={{ style: { color: '#94a3b8' } }}
+              SelectProps={{ style: { color: '#f8fafc' } }}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  '& fieldset': { borderColor: '#334155' },
-                  '&:hover fieldset': { borderColor: '#475569' },
-                  '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+                  '& fieldset': { borderColor: '#475569' },
+                  '&:hover fieldset': { borderColor: '#06b6d4' },
+                  '&.Mui-focused fieldset': { borderColor: '#06b6d4' },
                 },
-                '& .MuiInputLabel-root.Mui-focused': { color: '#6366f1' },
-                '& .MuiFormHelperText-root': { color: '#ef4444' }
+                '& .MuiSvgIcon-root': { color: '#94a3b8' },
               }}
-            />
+            >
+              <MenuItem value="user">Standard Gamer (User)</MenuItem>
+              <MenuItem value="admin">Administrator (Admin)</MenuItem>
+            </TextField>
 
             <Button
               color="primary"
               variant="contained"
               fullWidth
               type="submit"
-              disabled={isLoading}
-              className="py-3 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 transition-colors uppercase tracking-wider flex justify-center items-center"
-              sx={{ 
-                bgcolor: '#4f46e5', 
-                color: '#ffffff', 
-                textTransform: 'none', 
-                fontWeight: 'bold', 
-                py: 1.5,
-                borderRadius: '0.75rem',
-                '&:hover': { bgcolor: '#6366f1' } 
-              }}
+              disabled={loading}
+              className="bg-cyan-600 hover:bg-cyan-500 py-3 rounded-xl font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{ backgroundColor: '#0891b2', color: '#ffffff', textTransform: 'none', fontWeight: 'bold' }}
             >
-              {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Register'}
             </Button>
           </form>
 
-          {/* Login Link */}
-          <Box className="mt-6 text-center">
-            <Typography variant="body2" className="text-slate-400">
-              Already have an account?{' '}
-              <Link to={ROUTES.LOGIN} className="text-indigo-400 hover:text-indigo-300 font-semibold hover:underline">
-                Sign In
-              </Link>
-            </Typography>
-          </Box>
+          <div className="mt-6 text-center text-sm text-slate-400">
+            Already have an account?{' '}
+            <Link to="/login" className="font-semibold text-cyan-400 hover:text-cyan-300 hover:underline">
+              Sign In here
+            </Link>
+          </div>
         </Paper>
       </div>
     </div>

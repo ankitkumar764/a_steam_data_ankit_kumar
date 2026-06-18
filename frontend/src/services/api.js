@@ -1,16 +1,13 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
-
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 seconds timeout
 });
 
-// Request Interceptor: Automatically inject JWT authorization token
+// Request interceptor to attach JWT token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -24,36 +21,53 @@ api.interceptors.request.use(
   }
 );
 
-// Response Interceptor: Format errors and handle auth failures (401)
+// Response interceptor to handle errors and token refreshing
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    const status = error.response ? error.response.status : null;
-    let message = 'An unexpected network error occurred.';
+  (response) => response.data,
+  async (error) => {
+    const originalRequest = error.config;
 
-    if (error.response && error.response.data) {
-      message = error.response.data.message || message;
-    } else if (error.message) {
-      message = error.message;
+    // Handle token expiry / 401 Unauthorized
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url.includes('/auth/login') &&
+      !originalRequest.url.includes('/jwt/refresh-token')
+    ) {
+      originalRequest._retry = true;
+      const expiredToken = localStorage.getItem('token');
+      if (expiredToken) {
+        try {
+          // Attempt to refresh the JWT token
+          const response = await axios.post('http://localhost:5000/api/v1/jwt/refresh-token', {
+            token: expiredToken,
+          });
+          
+          if (response.data && response.data.token) {
+            const newToken = response.data.token;
+            localStorage.setItem('token', newToken);
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            return axios(originalRequest);
+          }
+        } catch (refreshError) {
+          // Refresh failed, clean up auth session
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login?expired=true';
+        }
+      }
     }
 
-    if (status === 401) {
-      // Token has expired or is invalid, perform automatic cleanup
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      
-      // Dispatch custom event to notify listeners (like Redux or Routers) to redirect to login
-      window.dispatchEvent(new Event('auth-unauthorized'));
-    }
+    // Normalize error payload structure
+    const normalizedError = {
+      success: false,
+      message: error.response?.data?.message || error.message || 'An error occurred',
+      status: error.response?.status || 500,
+      errors: error.response?.data?.errors || null,
+    };
 
-    // Return a standardized error structure
-    return Promise.reject({
-      status,
-      message,
-      originalError: error,
-    });
+    return Promise.reject(normalizedError);
   }
 );
 
